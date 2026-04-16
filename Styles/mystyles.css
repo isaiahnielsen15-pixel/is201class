@@ -1,0 +1,60 @@
+body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 15px;
+            color: grey;
+            background-color: blue;
+}
+li {
+font-size: 14px;
+font-style: italic;
+font-weight: normal;
+ }
+a {
+color: maroon;
+text-decoration: none;
+ }
+ a:hover {
+    text-decoration: underline;
+ }
+ .ResumeListHeading {
+    font-weight: bold;
+    font-style: normal;
+ }
+ .underline {
+    text-decoration: underline;}
+    .bold {font-weight: bold;}
+    .justify {text-align: justify;}
+
+
+a:visited {
+    color: rgb(209, 9, 16);
+}
+
+/* .homebg {
+    background-image: url('../images/images/download.jpg');
+    background-position: top right;
+    background-repeat: ; */
+/* } */
+
+#header {
+    background-color: rgb(49, 40, 40);
+    padding: 20px;
+    text-align: center;
+    border-bottom: 2px solid grey;
+}
+
+#nav {
+    background-color: lightgray;
+    padding: 15px;
+    text-align: center;
+    border-bottom: 2px solid grey;
+}
+
+#content {
+    background-color: white;
+    width: 80%;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 10px;
+}
+

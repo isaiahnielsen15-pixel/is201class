@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Home Page</title>
+     <link rel="stylesheet" href="Styles/mystyles.css">
+
+</head>
+<style>body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 15px;
+            color: grey;
+            background-color: rgb(172, 166, 166);
+}
+</style>
+<body class="homebg">
+    <a href="#">Snake Game</a>   |
+    <a href="../IS web/html/myresume.html">My Resume</a>  |
+    <a href="html/from-scratch.html">Golf</a>
+    <h4 style="text-decoration: underline; font-style: italic;">Home Page</h4>
+
+    <img src="images/images/snake.webp" height="300">
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snake</title>
+  <style>
+    :root {
+      --bg: #f5f1e8;
+      --panel: #fffdf8;
+      --grid: #d7cfbe;
+      --text: #2f2a22;
+      --muted: #6c655b;
+      --snake: #3f7d4c;
+      --food: #b94e48;
+      --button: #efe6d6;
+      --button-border: #b8ac95;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Georgia, "Times New Roman", serif;
+      background: var(--bg);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .panel {
+      width: min(100%, 560px);
+      background: var(--panel);
+      border: 1px solid var(--button-border);
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(47, 42, 34, 0.08);
+    }
+
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .label {
+      margin: 0;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .value {
+      margin: 4px 0 0;
+      font-size: 1.8rem;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      border: 1px solid var(--button-border);
+      background: var(--button);
+      color: var(--text);
+      padding: 10px 14px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .board-wrap {
+      position: relative;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(16, minmax(0, 1fr));
+      gap: 1px;
+      aspect-ratio: 1;
+      width: 100%;
+      background: var(--grid);
+      border: 1px solid var(--button-border);
+    }
+
+    .cell { background: #faf7f0; }
+    .cell.snake { background: var(--snake); }
+    .cell.food { background: var(--food); }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      text-align: center;
+      background: rgba(255, 253, 248, 0.78);
+    }
+
+    .hidden { display: none; }
+
+    .controls-copy {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .controls-copy p { margin: 4px 0; }
+
+    .mobile-controls {
+      margin-top: 18px;
+      display: grid;
+      gap: 8px;
+      justify-items: center;
+    }
+
+    .control-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .control {
+      min-width: 88px;
+    }
+
+    @media (min-width: 720px) {
+      .mobile-controls { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="panel">
+    <header class="hud">
+      <div>
+        <p class="label">Score</p>
+        <p id="score" class="value">0</p>
+      </div>
+      <div class="actions">
+        <button id="pause-button" type="button">Pause</button>
+        <button id="restart-button" type="button">Restart</button>
+      </div>
+    </header>
+
+    <div class="board-wrap">
+      <div id="board" class="board"></div>
+      <div id="overlay" class="overlay hidden"></div>
+    </div>
+
+    <section class="controls-copy">
+      <p>Use arrow keys or WASD to move.</p>
+      <p>Press Space to pause and Enter to restart after game over.</p>
+    </section>
+
+    <section class="mobile-controls">
+      <button class="control" data-direction="up" type="button">Up</button>
+      <div class="control-row">
+        <button class="control" data-direction="left" type="button">Left</button>
+        <button class="control" data-direction="down" type="button">Down</button>
+        <button class="control" data-direction="right" type="button">Right</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const GRID_SIZE = 16;
+    const INITIAL_TICK_MS = 140;
+
+    const board = document.querySelector("#board");
+    const scoreValue = document.querySelector("#score");
+    const overlay = document.querySelector("#overlay");
+    const pauseButton = document.querySelector("#pause-button");
+    const restartButton = document.querySelector("#restart-button");
+    const controlButtons = document.querySelectorAll("[data-direction]");
+
+    const DIRECTION_VECTORS = {
+      up: { x: 0, y: -1 },
+      down: { x: 0, y: 1 },
+      left: { x: -1, y: 0 },
+      right: { x: 1, y: 0 }
+    };
+
+    const OPPOSITES = {
+      up: "down",
+      down: "up",
+      left: "right",
+      right: "left"
+    };
+
+    function createInitialSnake() {
+      return [
+        { x: 2, y: 8 },
+        { x: 1, y: 8 },
+        { x: 0, y: 8 }
+      ];
+    }
+
+    function positionsEqual(a, b) {
+      return a.x === b.x && a.y === b.y;
+    }
+
+    function isInsideGrid(position) {
+      return position.x >= 0 && position.y >= 0 && position.x < GRID_SIZE && position.y < GRID_SIZE;
+    }
+
+    function normalizeDirection(currentDirection, requestedDirection) {
+      if (!requestedDirection || !DIRECTION_VECTORS[requestedDirection]) return currentDirection;
+      if (OPPOSITES[currentDirection] === requestedDirection) return currentDirection;
+      return requestedDirection;
+    }
+
+    function randomFreeCell(snake) {
+      const occupied = new Set(snake.map(segment => `${segment.x},${segment.y}`));
+      const freeCells = [];
+
+      for (let y = 0; y < GRID_SIZE; y++) {
+        for (let x = 0; x < GRID_SIZE; x++) {
+          const key = `${x},${y}`;
+          if (!occupied.has(key)) freeCells.push({ x, y });
+        }
+      }
+
+      if (!freeCells.length) return null;
+      return freeCells[Math.floor(Math.random() * freeCells.length)];
+    }
+
+    function createInitialState() {
+      const snake = createInitialSnake();
+      return {
+        snake,
+        direction: "right",
+        pendingDirection: "right",
+        food: randomFreeCell(snake),
+        score: 0,
+        tickMs: INITIAL_TICK_MS,
+        isGameOver: false,
+        isPaused: false
+      };
+    }
+
+    function stepGame(state) {
+      if (state.isGameOver || state.isPaused) return state;
+
+      const direction = normalizeDirection(state.direction, state.pendingDirection);
+      const head = state.snake[0];
+      const vector = DIRECTION_VECTORS[direction];
+      const nextHead = { x: head.x + vector.x, y: head.y + vector.y };
+      const eatsFood = state.food && positionsEqual(nextHead, state.food);
+      const bodyToCheck = eatsFood ? state.snake : state.snake.slice(0, -1);
+      const hitsSelf = bodyToCheck.some(segment => positionsEqual(segment, nextHead));
+      const hitsWall = !isInsideGrid(nextHead);
+
+      if (hitsSelf || hitsWall) {
+        return { ...state, direction, pendingDirection: direction, isGameOver: true };
+      }
+
+      const nextSnake = [nextHead, ...state.snake];
+      if (!eatsFood) nextSnake.pop();
+
+      const nextFood = eatsFood ? randomFreeCell(nextSnake) : state.food;
+
+      return {
+        ...state,
+        snake: nextSnake,
+        direction,
+        pendingDirection: direction,
+        food: nextFood,
+        score: state.score + (eatsFood ? 1 : 0),
+        isGameOver: eatsFood && nextFood === null ? true : state.isGameOver
+      };
+    }
+
+    let state = createInitialState();
+    let tickHandle = null;
+
+    const cells = [];
+    for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      board.appendChild(cell);
+      cells.push(cell);
+    }
+
+    function positionToIndex(position) {
+      return position.y * GRID_SIZE + position.x;
+    }
+
+    function render() {
+      cells.forEach(cell => { cell.className = "cell"; });
+
+      state.snake.forEach(segment => {
+        cells[positionToIndex(segment)]?.classList.add("snake");
+      });
+
+      if (state.food) {
+        cells[positionToIndex(state.food)]?.classList.add("food");
+      }
+
+      scoreValue.textContent = String(state.score);
+
+      if (state.isGameOver) {
+        overlay.textContent = "Game over. Press Restart or Enter to play again.";
+        overlay.classList.remove("hidden");
+        pauseButton.textContent = "Pause";
+      } else if (state.isPaused) {
+        overlay.textContent = "Paused";
+        overlay.classList.remove("hidden");
+        pauseButton.textContent = "Resume";
+      } else {
+        overlay.textContent = "";
+        overlay.classList.add("hidden");
+        pauseButton.textContent = "Pause";
+      }
+    }
+
+    function restartGame() {
+      state = createInitialState();
+      render();
+    }
+
+    function tick() {
+      state = stepGame(state);
+      render();
+    }
+
+    function startLoop() {
+      if (tickHandle !== null) clearInterval(tickHandle);
+      tickHandle = setInterval(tick, state.tickMs);
+    }
+
+    function updateDirection(direction) {
+      state = {
+        ...state,
+        pendingDirection: normalizeDirection(state.direction, direction)
+      };
+    }
+
+    window.addEventListener("keydown", event => {
+      const keyMap = {
+        ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right",
+        w: "up", W: "up", s: "down", S: "down", a: "left", A: "left", d: "right", D: "right"
+      };
+
+      if (event.code === "Space") {
+        event.preventDefault();
+        if (!state.isGameOver) {
+          state = { ...state, isPaused: !state.isPaused };
+          render();
+        }
+        return;
+      }
+
+      if (event.key === "Enter" && state.isGameOver) {
+        restartGame();
+        return;
+      }
+
+      const direction = keyMap[event.key];
+      if (direction) {
+        event.preventDefault();
+        updateDirection(direction);
+      }
+    });
+
+    pauseButton.addEventListener("click", () => {
+      if (!state.isGameOver) {
+        state = { ...state, isPaused: !state.isPaused };
+        render();
+      }
+    });
+
+    restartButton.addEventListener("click", restartGame);
+
+    controlButtons.forEach(button => {
+      button.addEventListener("click", () => updateDirection(button.dataset.direction));
+    });
+
+    render();
+    startLoop();
+  </script>
+</body>
+</html>
